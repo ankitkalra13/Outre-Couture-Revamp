@@ -7,12 +7,10 @@ This is a fully responsive **Next.js 13 App Router** frontend for a business set
 ## 📁 Project Structure
 
 app/
-├── blog/
+├── products/
 │ └── [slug]/
-│ └── page.jsx # Blog detail dynamic page
-├── contract/page.jsx # Contract services
-├── golden-visa/page.jsx # Golden Visa page
-├── services/page.jsx # Services listing
+│ └── page.jsx # Product detail dynamic page
+├── contract/page.jsx # Contract Us
 ├── layout.jsx # App layout
 ├── page.jsx # Homepage
 |
@@ -28,9 +26,8 @@ components/
 ├── TestimonialSlider.jsx
 |
 lib/
-├── blogs.json # Blog data
+├── products.json # Products data
 ├── faqItems.json
-├── serviceData.json
 ├── testimonialData.json
 
 
@@ -48,9 +45,9 @@ lib/
 
 ## ✨ Features
 
-- 🔍 Blog Listing with Search and Category Filter
-- 📄 Blog Detail Page with Latest Blogs
-- 📚 Dynamic Pages for Services, Golden Visa, Contract, etc.
+- 🔍 Products Listing with Search and Category Filter
+- 📄 Products Detail Page
+- 📚 Dynamic Pages for About and Contract, etc.
 - 🧩 Reusable and animated components using Framer Motion
 - 🔄 Spinner Loader for async operations
 - 🎨 Fully responsive design with Tailwind CSS
