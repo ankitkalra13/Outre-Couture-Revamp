@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import IMAGES from '@/lib/images';
 
-
 const marqueeVariants = {
   animate: {
     x: ['0%', '-100%'],
@@ -44,8 +43,8 @@ const PartnersMarquee = () => {
     IMAGES.Brands.r7,
     IMAGES.Brands.r8,
     IMAGES.Brands.r9,
-    
   ];
+  
   const Marquee1Images2 = [
     IMAGES.Brands.r12,
     IMAGES.Brands.r13,
@@ -71,10 +70,10 @@ const PartnersMarquee = () => {
           <div key={index} className="flex-shrink-0">
             <Image
               src={image}
-              alt="Award Logo"
+              alt="Partner Logo"
               width={200}
               height={200}
-              className="w-auto h-24 sm:h-32 object-contain"
+              className="w-auto h-24 sm:h-32 object-contain grayscale hover:grayscale-0 transition-all duration-300"
               loading="lazy"
             />
           </div>
@@ -84,13 +83,15 @@ const PartnersMarquee = () => {
   );
 
   return (
-    <section className="bg-white py-sp-big">
-      <div className="">
+    <section className="bg-white py-20">
+      <div className="container mx-auto px-4">
         <div className="text-center mb-[60px]">
-          <h2 className="text-3xl font-medium mb-[20px] text-black">
+          <h2 className="text-3xl lg:text-4xl font-bold mb-[20px] text-secondary">
             Brands & Partners
           </h2>
-          
+          <p className="text-gray text-lg max-w-2xl mx-auto">
+            Trusted by leading fashion brands worldwide for quality manufacturing and reliable partnerships
+          </p>
         </div>
 
         <div className="space-y-[50px]">

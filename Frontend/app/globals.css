@@ -83,55 +83,73 @@
 }
 
 
-.theme-btn{
-    background-color: #fff;
-    color: black;
-    display: inline-block;
-    font-size: 14px;
-    font-weight: 500;
-    padding: 8px 20px;
-    border-radius: 0;
-    text-transform: capitalize;
-    -webkit-transition: all 0.3s ease-in-out;
-    transition: all 0.3s ease-in-out;
+  .section-headline{
+    font-weight: 400;
+    font-size: 62px;
+    line-height: 74px;
+    margin: 0;
     position: relative;
-    z-index: 1;
-    line-height: 1;
-    border: 1px solid black;
+    padding: 20px;
   }
 
+  .section-headline::before {
+    content: "";
+    display: inline-block;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 2px dashed #3c3c3c;
+    left: 0px;
+    top: 0px;
+  }
+
+  .section-headline::after {
+    content: "";
+    display: inline-block;
+    width: 50px;
+    height: 50px;
+    position: absolute;
+    background: url("../public/assets/img/scissors.svg");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100%;
+    right: 10;
+    top: -25px;
+  }
+
+
+  .theme-btn {
+    background: #fee145;
+    border-radius: 30px;
+    color: #fff;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 20px;
+    padding: 18px 30px;
+    border: none;
+    outline: none;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  
   .theme-btn::before {
     content: "";
-    background-color:#fee145 ;
-    width: 0;
-    height: 50%;
+    display: inline-block;
     position: absolute;
-    top: 0;
-    left: 0;
-    -webkit-transition: all 0.3s cubic-bezier(0.785, 0.135, 0.15, 0.86);
-    transition: all 0.3s cubic-bezier(0.785, 0.135, 0.15, 0.86);
-    z-index: -1;
+    width: calc(100% - 10px);
+    height: calc(100% - 10px);
+    border: 1px dashed #fff;
+    border-radius: 30px;
+    left: 4px;
+    top: 4px;
+    transition: all 0.3s;
   }
 
-  .theme-btn::after {
-    content: "";
-    background-color: #fee145;
-    width: 0;
-    height: 50%;
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    -webkit-transition: all 0.3s cubic-bezier(0.785, 0.135, 0.15, 0.86);
-    transition: all 0.3s cubic-bezier(0.785, 0.135, 0.15, 0.86);
-    z-index: -1;
-  }
 
-  .theme-btn:hover::before, .theme-btn:hover::after {
-    width: 100%;
-  }
-
-  .theme-btn:hover {
-    border-color: #fee145 ; 
+  .theme-btn:hover  {
+    background: #fee145;
+    color: #fff; 
   }
 
   .theme-btn.secondary{
@@ -146,3 +164,8 @@
   .theme-btn.secondary:hover {
     color: #fff;
   }
+
+  .swiper-pagination-bullet-active{
+    background-color: #fee145 !important;
+  }
+  

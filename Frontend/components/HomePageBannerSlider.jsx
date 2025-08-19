@@ -10,45 +10,31 @@ import IMAGES from '@/lib/images';
 
 const slides = [
   {
-    type: 'video',
-    src: '/assets/video/Banner-Video-1.mp4',
-    alt: 'Banner Video 1',
-  },
-  {
-    type: 'image',
-    src: IMAGES.HomeNew.oneWebp,
+    heading: '<span style="color: #fee145;">Tops</span> <br/> Manufacturer <br/>  For <strong style="color: #fee145;">YOUR</strong> Clothing Line',
+    src: '/assets/img/home-page/1.webp',
     alt: 'Banner Image 1',
   },
   {
-    type: 'video',
-    src: '/assets/video/Banner-Video-2.mp4',
-    alt: 'Banner Video 2',
-  },
-  {
-    type: 'image',
-    src: IMAGES.HomeNew.twoWebp,
+    heading: '<span style="color: #fee145;">Dress</span> <br/> Manufacturer <br/> For <strong style="color: #fee145;">YOUR</strong> Clothing Line',
+    src: '/assets/img/home-page/2.webp',
     alt: 'Banner Image 2',
   },
   {
-    type: 'video',
-    src: '/assets/video/Banner-Video-3.mp4',
-    alt: 'Banner Video 3',
-  },
-  {
-    type: 'image',
-    src: IMAGES.HomeNew.customDimensions,
+    heading: '<span style="color: #fee145;">Hoodies</span> <br/> Manufacturer <br/> For <strong style="color: #fee145;">YOUR</strong> Clothing Line',
+    src: '/assets/img/home-page/about-banner-2.webp',
     alt: 'Banner Image 3',
   },
+
 ];
 
 export default function HomePageBannerSlider() {
   return (
-    <div className="relative w-full h-[50vh] overflow-hidden">
+    <div className="relative w-full h-full overflow-hidden">
       <Swiper
         modules={[Navigation, Pagination, Autoplay, Mousewheel]}
         spaceBetween={0}
         slidesPerView={1}
-        autoplay={{ delay: 8000 }}
+        autoplay={{ delay: 100000 }}
         speed={1000}
         pagination={{ clickable: true }}
         loop
@@ -57,24 +43,30 @@ export default function HomePageBannerSlider() {
       >
         {slides.map((slide, index) => (
           <SwiperSlide key={index} className="relative w-full h-full">
-            {slide.type === 'image' ? (
-              <Image
-                src={slide.src}
-                alt={slide.alt}
-                fill
-                priority
-                className="object-cover"
-              />
-            ) : (
-              <video
-                src={slide.src}
-                autoPlay
-                muted
-                loop
-                playsInline
-                className="w-full h-full object-cover"
-              />
-            )}
+            
+            <section className="py-20 bg-[#EDEDED]">
+              <div className='container mx-auto px-4'>
+                <div className="grid grid-cols-2 gap-8 items-center">
+                  <div>
+                    <h1 className="section-headline" dangerouslySetInnerHTML={{ __html: slide.heading }}></h1>
+
+                    <p className="mt-10 text-lg text-[#3c3c3c] max-w-[50%]">
+                      New fashion brand? Outre Couture is here to be your first and last stop for all clothing needs.
+                    </p>
+
+                    <button className="theme-btn mt-6">Get Started</button>
+                  </div>
+
+                  <div className='w-full h-full'>
+                    <img
+                      src={slide.src}
+                      alt="header"
+                      className="w-full h-full"
+                    />
+                  </div>
+                </div>
+              </div>
+            </section>
           </SwiperSlide>
         ))}
       </Swiper>

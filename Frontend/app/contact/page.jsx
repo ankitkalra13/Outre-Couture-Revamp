@@ -7,6 +7,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import Image from 'next/image';
+import { useAppDispatch } from '@/store/hooks';
+import { submitRFQ } from '@/store/slices/rfqSlice';
+import { useToast } from '@/components/ui/Toast';
 
 import { 
   MapPin, 
@@ -28,6 +31,8 @@ const contactSchema = z.object({
 
 export default function Contact() {
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const dispatch = useAppDispatch();
+  const { success, error } = useToast();
   
   const {
     register,
@@ -39,17 +44,30 @@ export default function Contact() {
   });
 
   const onSubmit = async (data) => {
-    // Simulate form submission
-    console.log('Form data:', data);
-    
-    // Here you would typically send the data to your backend
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    setIsSubmitted(true);
-    reset();
-    
-    // Reset success message after 5 seconds
-    setTimeout(() => setIsSubmitted(false), 5000);
+    try {
+      // Convert form data to RFQ format
+      const rfqData = {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        company: 'Individual', // Default since we don't have company field
+        requirements: data.message,
+        additional_info: `Service of Interest: ${data.service}`,
+        product_category: data.service,
+        quantity: 'Not specified',
+        budget: 'Not specified',
+        timeline: 'Not specified'
+      };
+
+      // Submit RFQ to backend using Redux
+      await dispatch(submitRFQ(rfqData)).unwrap();
+      
+      success('Your request has been submitted successfully! We will get back to you soon.');
+      reset();
+    } catch (error) {
+      console.error('Error submitting RFQ:', error);
+      error('Failed to submit your request. Please try again.');
+    }
   };
 
   const services = [

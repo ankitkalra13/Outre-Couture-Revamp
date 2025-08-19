@@ -12,21 +12,16 @@ import AboutUsSection from '@/components/AboutSection';
 import Achievements from '@/components/Achievements';
 import OurServicesSlider from '@/components/OurServicesSlider';
 
-
-
 export default function Home() {
-
-
   return (
     <div>
-      <section className="relative h-[50vh] sm:h-[450px] sm:max-h-[600px]">
+      <section className="relative">
           <HomePageBannerSlider/>      
       </section>
 
       <section className='py-20'>
         <AboutUsSection/>
       </section> 
-
 
       <OurServicesSlider/>
 
@@ -39,7 +34,6 @@ export default function Home() {
       <section className="py-20">
           <Roadmap/>
       </section>
-
     </div>
   );
 }
