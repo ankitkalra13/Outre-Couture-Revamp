@@ -108,7 +108,6 @@ export default function AddProductModal({ isOpen, onClose, editingProduct = null
       setSpecifications({ material: '', color: '', size: '' });
       success(editingProduct ? 'Product updated successfully!' : 'Product created successfully!');
     } catch (error) {
-      console.error('Error saving product:', error);
       error(error || 'Failed to save product');
     } finally {
       setLoading(false);

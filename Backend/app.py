@@ -752,7 +752,31 @@ def get_products():
         if category_id:
             query['category_id'] = category_id
         
-        products = list(products_collection.find(query, {'_id': 0}).skip(skip).limit(limit))
+        # Add main category filtering
+        main_category_name = request.args.get('main_category_name')
+        if main_category_name:
+            query['main_category_name'] = main_category_name
+        
+        # Add search filtering
+        search = request.args.get('search')
+        if search:
+            query['$or'] = [
+                {'name': {'$regex': search, '$options': 'i'}},
+                {'description': {'$regex': search, '$options': 'i'}}
+            ]
+        
+        # Apply sorting
+        sort_by = request.args.get('sortBy', 'name')
+        sort_options = {
+            'name': [('name', 1)],
+            'name_desc': [('name', -1)],
+            'newest': [('created_at', -1)],
+            'oldest': [('created_at', 1)]
+        }
+        
+        sort_criteria = sort_options.get(sort_by, [('name', 1)])
+        
+        products = list(products_collection.find(query, {'_id': 0}).sort(sort_criteria).skip(skip).limit(limit))
         
         # Convert to JSON serializable format
         products_json = convert_to_json_serializable(products)
@@ -791,8 +815,17 @@ def get_products_by_main_category(main_category_slug):
         limit = int(request.args.get('limit', 50))
         skip = int(request.args.get('skip', 0))
         
-        # Build query
-        query = {'is_active': is_active, 'main_category_slug': main_category_slug}
+        # Build query - check both main_category_slug and main_category_name
+        # Convert main_category_slug to title case for comparison with main_category_name
+        main_category_title = main_category_slug.replace('-', ' ').title()
+        
+        query = {
+            'is_active': is_active,
+            '$or': [
+                {'main_category_slug': main_category_slug},
+                {'main_category_name': main_category_title}
+            ]
+        }
         if sub_category_id:
             query['category_id'] = sub_category_id
         

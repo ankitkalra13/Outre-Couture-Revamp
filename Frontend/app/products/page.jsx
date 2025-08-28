@@ -8,11 +8,14 @@ import { fetchProducts } from '@/store/slices/productSlice';
 import { fetchMainCategories } from '@/store/slices/categorySlice';
 import Image from 'next/image';
 import Link from 'next/link';
+import { getImageUrl } from '@/lib/utils';
 
 export default function ProductsPage() {
   const dispatch = useAppDispatch();
   const { products, loading, error, filters: productFilters } = useAppSelector((state) => state.products);
   const { mainCategories } = useAppSelector((state) => state.categories);
+  
+
   
   const [localFilters, setLocalFilters] = useState({
     search: '',
@@ -37,7 +40,7 @@ export default function ProductsPage() {
     };
     
     if (selectedMainCategory) {
-      filters.main_category_slug = selectedMainCategory;
+      filters.main_category_name = selectedMainCategory;
     }
     
     if (localFilters.search) {
@@ -88,7 +91,7 @@ export default function ProductsPage() {
       <div className="relative h-64 bg-gray-100">
         {product.images && product.images.length > 0 ? (
           <Image
-            src={product.images[0]}
+            src={getImageUrl(product.images[0])}
             alt={product.name}
             fill
             className="object-cover"
@@ -118,7 +121,7 @@ export default function ProductsPage() {
         
         <div className="flex items-center justify-between">
           <Link 
-            href={`/products/${product.main_category_slug}/${product.id}`}
+            href={`/products/${product.main_category_name?.toLowerCase()}/${product.id}`}
             className="bg-brand text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors flex items-center"
           >
             <Eye size={16} className="mr-2" />
@@ -195,9 +198,9 @@ export default function ProductsPage() {
                   {mainCategories.map((category) => (
                     <button
                       key={category.id}
-                      onClick={() => handleMainCategorySelect(category.slug)}
+                      onClick={() => handleMainCategorySelect(category.name)}
                       className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
-                        selectedMainCategory === category.slug
+                        selectedMainCategory === category.name
                           ? 'bg-brand text-white'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
@@ -242,27 +245,29 @@ export default function ProductsPage() {
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">All Products</h2>
                   <p className="text-gray-600">
-                    {loading && products.length === 0 ? 'Loading...' : `${currentProducts.length} of ${products.length} products`}
+                    {products.length > 0 ? `${currentProducts.length} of ${products.length} products` : 'Loading products...'}
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-500">Page {currentPage} of {totalPages}</span>
+                  <span className="text-sm text-gray-500">
+                    {products.length > 0 ? `Page ${currentPage} of ${totalPages}` : 'Loading...'}
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Loading Overlay for Filter Changes */}
-            {loading && products.length > 0 && (
-              <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-10 rounded-xl">
+            {/* Main Content Area with Min Height */}
+            <div className="min-h-[600px]">
+
+            {/* Main Loading Spinner - Shows until everything loads */}
+            {(loading || products.length === 0) ? (
+              <div className="flex items-center justify-center py-20">
                 <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand mx-auto"></div>
-                  <p className="mt-2 text-sm text-gray-600">Updating products...</p>
+                  <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-brand mx-auto mb-4"></div>
+                  <p className="text-lg text-gray-600">Loading products...</p>
                 </div>
               </div>
-            )}
-
-            {/* Products Grid */}
-            {error ? (
+            ) : error ? (
               <div className="text-center py-12">
                 <p className="text-red-600 mb-4">{error}</p>
                 <button
@@ -271,20 +276,6 @@ export default function ProductsPage() {
                 >
                   Try Again
                 </button>
-              </div>
-            ) : loading && products.length === 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <div key={i} className="bg-white rounded-xl shadow-lg overflow-hidden animate-pulse">
-                    <div className="h-64 bg-gray-200"></div>
-                    <div className="p-6 space-y-3">
-                      <div className="h-4 bg-gray-200 rounded w-1/3"></div>
-                      <div className="h-5 bg-gray-200 rounded"></div>
-                      <div className="h-3 bg-gray-200 rounded w-2/3"></div>
-                      <div className="h-10 bg-gray-200 rounded w-1/2"></div>
-                    </div>
-                  </div>
-                ))}
               </div>
             ) : currentProducts.length === 0 ? (
               <div className="text-center py-12">
@@ -359,6 +350,7 @@ export default function ProductsPage() {
                 )}
               </>
             )}
+            </div>
           </div>
         </div>
       </div>

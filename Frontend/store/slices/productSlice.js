@@ -6,16 +6,13 @@ export const fetchProducts = createAsyncThunk(
   'products/fetchProducts',
   async (filters = {}, { rejectWithValue }) => {
     try {
-      console.log('fetchProducts called with filters:', filters);
       const response = await apiService.getProducts(filters);
-      console.log('fetchProducts API response:', response);
       if (response.success) {
         return response;
       } else {
         return rejectWithValue(response.error || 'Failed to fetch products');
       }
     } catch (error) {
-      console.error('fetchProducts error:', error);
       return rejectWithValue(error.message || 'Failed to fetch products');
     }
   }
@@ -155,15 +152,15 @@ const productSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchProducts.fulfilled, (state, action) => {
-        state.loading = false;
-        state.products = action.payload.products;
-        state.pagination = {
-          total: action.payload.total,
-          limit: action.payload.limit,
-          skip: action.payload.skip,
-        };
-      })
+          .addCase(fetchProducts.fulfilled, (state, action) => {
+      state.loading = false;
+      state.products = action.payload.products;
+      state.pagination = {
+        total: action.payload.total,
+        limit: action.payload.limit,
+        skip: action.payload.skip,
+      };
+    })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;

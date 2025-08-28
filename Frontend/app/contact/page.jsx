@@ -65,7 +65,6 @@ export default function Contact() {
       success('Your request has been submitted successfully! We will get back to you soon.');
       reset();
     } catch (error) {
-      console.error('Error submitting RFQ:', error);
       error('Failed to submit your request. Please try again.');
     }
   };

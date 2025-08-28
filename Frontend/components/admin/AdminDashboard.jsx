@@ -40,7 +40,7 @@ export default function AdminDashboard() {
 
       dispatch(setDashboardStats(stats));
     } catch (error) {
-      console.error('Error fetching stats:', error);
+      // Handle error silently
     }
   };
 

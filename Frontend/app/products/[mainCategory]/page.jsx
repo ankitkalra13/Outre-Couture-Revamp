@@ -9,6 +9,7 @@ import { fetchSubCategories } from '@/store/slices/categorySlice';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { getImageUrl } from '@/lib/utils';
 
 export default function CategoryProductsPage({ params }) {
   const { mainCategory } = params;
@@ -27,6 +28,7 @@ export default function CategoryProductsPage({ params }) {
   const [selectedSubCategory, setSelectedSubCategory] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = 12;
+  const [showLoader, setShowLoader] = useState(false);
 
   // Validate main category
   const validCategories = ['men', 'women', 'accessories', 'bags'];
@@ -37,12 +39,36 @@ export default function CategoryProductsPage({ params }) {
   const categorySubCategories = subCategories[mainCategory] || [];
   
   useEffect(() => {
-    dispatch(fetchSubCategories(mainCategory));
-    dispatch(fetchProductsByMainCategory({ 
-      mainCategorySlug: mainCategory, 
-      filters: { limit: 100 } 
-    }));
+    if (mainCategory) {
+      dispatch(fetchSubCategories(mainCategory));
+      dispatch(fetchProductsByMainCategory({ 
+        mainCategorySlug: mainCategory, 
+        filters: { limit: 100 } 
+      }));
+    }
   }, [dispatch, mainCategory]);
+
+  // Show loader when component mounts
+  useEffect(() => {
+    setShowLoader(true);
+  }, []);
+
+  // Control loader timing - show for at least 1 second
+  useEffect(() => {
+    if (loading) {
+      setShowLoader(true);
+    } else if (products.length === 0) {
+      // Show loader for 1 second even when no products
+      const timer = setTimeout(() => {
+        setShowLoader(false);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    } else {
+      // Has products, hide loader
+      setShowLoader(false);
+    }
+  }, [loading, products.length]);
 
   useEffect(() => {
     const filters = { 
@@ -62,7 +88,9 @@ export default function CategoryProductsPage({ params }) {
       filters.sortBy = localFilters.sortBy;
     }
     
-    dispatch(fetchProductsByMainCategory({ mainCategorySlug: mainCategory, filters }));
+    if (mainCategory) {
+      dispatch(fetchProductsByMainCategory({ mainCategorySlug: mainCategory, filters }));
+    }
   }, [selectedSubCategory, localFilters.search, localFilters.sortBy, currentPage, dispatch, mainCategory]);
 
   const handleFilterChange = (key, value) => {
@@ -114,7 +142,7 @@ export default function CategoryProductsPage({ params }) {
       <div className="relative h-64 bg-gray-100">
         {product.images && product.images.length > 0 ? (
           <Image
-            src={product.images[0]}
+            src={getImageUrl(product.images[0])}
             alt={product.name}
             fill
             className="object-cover"
@@ -174,14 +202,14 @@ export default function CategoryProductsPage({ params }) {
             <li>
               <ChevronRight size={16} className="text-gray-400" />
             </li>
-            <li className="text-gray-900 font-medium capitalize">{getCategoryTitle(mainCategory)}</li>
+            <li className="text-gray-900 font-medium capitalize">{mainCategory ? getCategoryTitle(mainCategory) : 'Loading...'}</li>
           </ol>
         </nav>
 
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">{getCategoryTitle(mainCategory)}</h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">Discover our collection of high-quality {mainCategory} products designed for modern lifestyles</p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">{mainCategory ? getCategoryTitle(mainCategory) : 'Loading...'}</h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">Discover our collection of high-quality {mainCategory || 'fashion'} products designed for modern lifestyles</p>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
@@ -280,68 +308,61 @@ export default function CategoryProductsPage({ params }) {
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">{getCategoryTitle(mainCategory)} Products</h2>
                   <p className="text-gray-600">
-                    {loading && products.length === 0 ? 'Loading...' : `${currentProducts.length} of ${products.length} products`}
+                    {products.length > 0 ? `${currentProducts.length} of ${products.length} products` : (showLoader ? 'Loading products...' : 'No products found')}
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-500">Page {currentPage} of {totalPages}</span>
+                  <span className="text-sm text-gray-500">
+                    {products.length > 0 ? `Page ${currentPage} of ${totalPages}` : (showLoader ? 'Loading...' : 'No products')}
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Loading Overlay for Filter Changes */}
-            {loading && products.length > 0 && (
-              <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-10 rounded-xl">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand mx-auto"></div>
-                  <p className="mt-2 text-sm text-gray-600">Updating products...</p>
-                </div>
-              </div>
-            )}
-
-            {/* Products Grid */}
-            {error ? (
-              <div className="text-center py-12">
-                <p className="text-red-600 mb-4">{error}</p>
-                <button
-                  onClick={() => dispatch(fetchProductsByMainCategory({ mainCategorySlug: mainCategory, filters: { limit: 100 } }))}
-                  className="bg-brand text-white px-6 py-2 rounded-lg hover:bg-red-800 transition-colors"
-                >
-                  Try Again
-                </button>
-              </div>
-            ) : loading && products.length === 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <div key={i} className="bg-white rounded-xl shadow-lg overflow-hidden animate-pulse">
-                    <div className="h-64 bg-gray-200"></div>
-                    <div className="p-6 space-y-3">
-                      <div className="h-4 bg-gray-200 rounded w-1/3"></div>
-                      <div className="h-5 bg-gray-200 rounded"></div>
-                      <div className="h-3 bg-gray-200 rounded w-2/3"></div>
-                      <div className="h-10 bg-gray-200 rounded w-1/2"></div>
-                    </div>
+                        {/* Main Content Area with Min Height */}
+            <div className="min-h-[600px]">
+              {/* Main Loading Spinner - Shows until everything loads */}
+              {(loading || showLoader) ? (
+                <div className="flex items-center justify-center py-20">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-brand mx-auto mb-4"></div>
+                    <p className="text-lg text-gray-600">Loading products...</p>
                   </div>
-                ))}
-              </div>
-            ) : currentProducts.length === 0 ? (
+                </div>
+              ) : error ? (
+                <div className="text-center py-12">
+                  <p className="text-red-600 mb-4">{error}</p>
+                  <button
+                    onClick={() => {
+                      if (mainCategory) {
+                        dispatch(fetchProductsByMainCategory({ mainCategorySlug: mainCategory, filters: { limit: 100 } }));
+                      }
+                    }}
+                    className="bg-brand text-white px-6 py-2 rounded-lg hover:bg-red-800 transition-colors"
+                  >
+                    Try Again
+                  </button>
+                </div>
+              ) : currentProducts.length === 0 ? (
               <div className="text-center py-12">
                 <div className="text-gray-400 mb-4">
                   <Package size={64} className="mx-auto" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">No products found</h3>
                 <p className="text-gray-600 mb-6">Try adjusting your search or filter criteria.</p>
-                <button
-                  onClick={() => {
-                    setLocalFilters({ search: '', sortBy: 'name', viewMode: 'grid' });
-                    setSelectedSubCategory(null);
-                    setCurrentPage(1);
-                    dispatch(fetchProductsByMainCategory({ mainCategorySlug: mainCategory, filters: { limit: 100 } }));
-                  }}
-                  className="bg-brand text-white px-6 py-2 rounded-lg hover:bg-red-800 transition-colors"
-                >
-                  Clear Filters
-                </button>
+                                  <button
+                    onClick={() => {
+                      setLocalFilters({ search: '', sortBy: 'name', viewMode: 'grid' });
+                      setSelectedSubCategory(null);
+                      setCurrentPage(1);
+                      if (mainCategory) {
+                        dispatch(fetchProductsByMainCategory({ mainCategorySlug: mainCategory, filters: { limit: 100 } }));
+                      }
+                    }}
+                    className="bg-brand text-white px-6 py-2 rounded-lg hover:bg-red-800 transition-colors"
+                  >
+                    Clear Filters
+                  </button>
               </div>
             ) : (
               <>
@@ -397,6 +418,7 @@ export default function CategoryProductsPage({ params }) {
                 )}
               </>
             )}
+            </div>
           </div>
         </div>
       </div>

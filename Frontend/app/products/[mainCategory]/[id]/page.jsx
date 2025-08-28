@@ -1,22 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Heart, Share2, Eye, Minus, Plus, ChevronRight } from 'lucide-react';
+import { Minus, Plus, ChevronRight } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchProduct } from '@/store/slices/productSlice';
-import { fetchProductsByMainCategory } from '@/store/slices/productSlice';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
+import { getImageUrl } from '@/lib/utils';
 
 export default function ProductDetailPage({ params }) {
   const { mainCategory, id } = params;
-  const router = useRouter();
   const dispatch = useAppDispatch();
   const { currentProduct, loading, error } = useAppSelector((state) => state.products);
-  const { products } = useAppSelector((state) => state.products);
   
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -28,6 +24,7 @@ export default function ProductDetailPage({ params }) {
     message: '',
     quantity: 1
   });
+  const [showLoader, setShowLoader] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -35,14 +32,31 @@ export default function ProductDetailPage({ params }) {
     }
   }, [dispatch, id]);
 
+  // Show loader when component mounts
   useEffect(() => {
-    if (mainCategory) {
-      dispatch(fetchProductsByMainCategory({ 
-        mainCategorySlug: mainCategory, 
-        filters: { limit: 4 } 
-      }));
+    setShowLoader(true);
+  }, []);
+
+  // Control loader timing - show for at least 1 second
+  useEffect(() => {
+    if (loading) {
+      setShowLoader(true);
+    } else if (currentProduct) {
+      // Has product, hide loader after 1 second
+      const timer = setTimeout(() => {
+        setShowLoader(false);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    } else if (error) {
+      // Has error, hide loader after 1 second
+      const timer = setTimeout(() => {
+        setShowLoader(false);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
     }
-  }, [dispatch, mainCategory]);
+  }, [loading, currentProduct, error]);
 
   const handleImageSelect = (index) => {
     setSelectedImage(index);
@@ -115,13 +129,18 @@ export default function ProductDetailPage({ params }) {
 
 
 
-        {loading && !currentProduct ? (
-          <div className="text-center py-20">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-brand mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading product details...</p>
-          </div>
-        ) : error || !currentProduct ? (
-          <div className="text-center py-20">
+        {/* Main Content Area with Min Height */}
+        <div className="min-h-[600px]">
+          {/* Main Loading Spinner - Shows until everything loads */}
+          {(loading || showLoader) ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-brand mx-auto mb-4"></div>
+                <p className="text-lg text-gray-600">Loading product details...</p>
+              </div>
+            </div>
+          ) : error || !currentProduct ? (
+            <div className="text-center py-20">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Product Not Found</h1>
             <p className="text-gray-600 mb-6">The product you are looking for could not be found.</p>
             <Link 
@@ -140,7 +159,7 @@ export default function ProductDetailPage({ params }) {
                 <div className="relative h-96 bg-gray-100 rounded-xl overflow-hidden mb-4">
                   {currentProduct.images && currentProduct.images.length > 0 ? (
                     <Image
-                      src={currentProduct.images[selectedImage]}
+                      src={getImageUrl(currentProduct.images[selectedImage])}
                       alt={currentProduct.name}
                       fill
                       className="object-cover"
@@ -164,7 +183,7 @@ export default function ProductDetailPage({ params }) {
                         }`}
                       >
                         <Image
-                          src={image}
+                          src={getImageUrl(image)}
                           alt={`${currentProduct.name} - Image ${index + 1}`}
                           fill
                           className="object-cover"
@@ -322,75 +341,9 @@ export default function ProductDetailPage({ params }) {
                 </div>
               </div>
             </div>
-
-                    {/* Related Products */}
-        <div className="mb-16">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8">Related Products</h2>
-          
-          {(() => {
-            const relatedProducts = products.filter(p => p.id !== id).slice(0, 4);
-            return loading && products.length === 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="bg-white rounded-xl shadow-lg overflow-hidden animate-pulse">
-                      <div className="h-48 bg-gray-200"></div>
-                      <div className="p-4 space-y-3">
-                        <div className="h-4 bg-gray-200 rounded"></div>
-                        <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-                        <div className="h-8 bg-gray-200 rounded w-1/2"></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : relatedProducts.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {relatedProducts.map((product) => (
-                    <motion.div
-                      key={product.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
-                    >
-                      <div className="relative h-48 bg-gray-100">
-                        {product.images && product.images.length > 0 ? (
-                          <Image
-                            src={product.images[0]}
-                            alt={product.name}
-                            fill
-                            className="object-cover"
-                          />
-                        ) : (
-                          <div className="flex items-center justify-center h-full text-gray-400">
-                            <span>No Image</span>
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="p-4">
-                        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-                          {product.name}
-                        </h3>
-                        
-                        <Link 
-                          href={`/products/${mainCategory}/${product.id}`}
-                          className="bg-brand text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors flex items-center justify-center w-full"
-                        >
-                          <Eye size={16} className="mr-2" />
-                          View Details
-                        </Link>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">No related products found</p>
-                </div>
-              );
-          })()}
-        </div>
           </>
         )}
+        </div>
       </div>
     </div>
   );

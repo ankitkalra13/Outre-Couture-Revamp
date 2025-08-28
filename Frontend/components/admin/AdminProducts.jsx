@@ -9,6 +9,7 @@ import { fetchCategories } from '@/store/slices/categorySlice';
 import AddProductModal from './AddProductModal';
 import { useToast } from '@/components/ui/Toast';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import { getImageUrl } from '@/lib/utils';
 
 export default function AdminProducts() {
   const dispatch = useAppDispatch();
@@ -37,7 +38,6 @@ export default function AdminProducts() {
       await dispatch(deleteProduct(productToDelete)).unwrap();
       success('Product deleted successfully!');
     } catch (error) {
-      console.error('Error deleting product:', error);
       error('Failed to delete product');
     }
   };
@@ -151,7 +151,7 @@ export default function AdminProducts() {
                       <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center mr-3">
                         {product.images && product.images.length > 0 ? (
                           <img
-                            src={product.images[0]}
+                            src={getImageUrl(product.images[0])}
                             alt={product.name}
                             className="w-10 h-10 rounded-lg object-cover"
                           />

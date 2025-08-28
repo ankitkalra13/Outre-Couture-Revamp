@@ -61,7 +61,6 @@ export default function AdminCategories() {
       setShowAddModal(false);
       success(editingCategory ? 'Category updated successfully!' : 'Category created successfully!');
     } catch (error) {
-      console.error('Error saving category:', error);
       error(error || 'Failed to save category');
     }
   };
@@ -76,7 +75,6 @@ export default function AdminCategories() {
       await dispatch(deleteCategory(categoryToDelete)).unwrap();
       success('Category deleted successfully!');
     } catch (error) {
-      console.error('Error deleting category:', error);
       error(error || 'Failed to delete category');
     }
   };

@@ -51,13 +51,11 @@ class ApiService {
       const data = await response.json();
 
       if (!response.ok) {
-        console.error('API request failed:', { status: response.status, data });
         throw new Error(data.error || `HTTP error! status: ${response.status}`);
       }
 
       return data;
     } catch (error) {
-      console.error('API request failed:', error);
       throw error;
     }
   }
@@ -169,6 +167,10 @@ class ApiService {
     const queryParams = new URLSearchParams();
     
     if (filters.category_id) queryParams.append('category_id', filters.category_id);
+    if (filters.sub_category_id) queryParams.append('sub_category_id', filters.sub_category_id);
+    if (filters.main_category_name) queryParams.append('main_category_name', filters.main_category_name);
+    if (filters.search) queryParams.append('search', filters.search);
+    if (filters.sortBy) queryParams.append('sortBy', filters.sortBy);
     if (filters.is_active !== undefined) queryParams.append('is_active', filters.is_active);
     if (filters.limit) queryParams.append('limit', filters.limit);
     if (filters.skip) queryParams.append('skip', filters.skip);

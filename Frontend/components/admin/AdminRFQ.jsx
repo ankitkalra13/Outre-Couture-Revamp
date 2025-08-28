@@ -24,7 +24,6 @@ export default function AdminRFQ() {
       await dispatch(updateRFQStatus({ rfqId, statusData: { status: newStatus } })).unwrap();
       success('RFQ status updated successfully!');
     } catch (error) {
-      console.error('Error updating RFQ status:', error);
       error('Failed to update status');
     }
   };

@@ -36,7 +36,6 @@ export default function AuthProvider({ children }) {
           }
         }
       } catch (error) {
-        console.error('Auth initialization error:', error);
         // Clear invalid tokens
         if (typeof window !== 'undefined') {
           localStorage.removeItem('access_token');
