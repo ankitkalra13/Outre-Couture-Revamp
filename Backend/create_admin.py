@@ -28,7 +28,7 @@ else:
     print(f"Loaded default environment configuration")
 
 # MongoDB Configuration
-MONGO_URI = os.getenv('MONGO_URI', 'mongodb+srv://ankitkalra13:ankit%408996@cluster0.j2yojqe.mongodb.net/UserDB')
+MONGO_URI = os.getenv('MONGO_URI', 'mongodb+srv://ankitkalra13:0yQ4N2JY1hJVXmyT@cluster0.j2yojqe.mongodb.net')
 BCRYPT_ROUNDS = int(os.getenv('BCRYPT_ROUNDS', 12))
 
 def hash_password(password):

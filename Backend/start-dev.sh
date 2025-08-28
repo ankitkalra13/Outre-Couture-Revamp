@@ -29,10 +29,13 @@ if [ ! -f "env.development" ]; then
     cp env.example env.development
     echo "Please edit env.development file with your configuration."
     echo "Required settings:"
-    echo "  - MONGO_URI: MongoDB connection string"
+    echo "  - MONGO_URI: MongoDB connection string (updated to use outre_couture database)"
     echo "  - MAIL_USERNAME: Your email address"
     echo "  - MAIL_PASSWORD: Your email password/app password"
     echo "  - ADMIN_EMAIL: Admin email for RFQ notifications"
+    echo ""
+    echo "Note: The MongoDB URI has been updated to use the outre_couture database."
+    echo "The database will be created automatically when the app starts."
     exit 1
 fi
 

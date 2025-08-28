@@ -33,6 +33,9 @@ if [ ! -f "env.production" ]; then
     echo "Please create env.production file with production configuration."
     echo "You can copy from env.example and modify for production:"
     echo "  cp env.example env.production"
+    echo ""
+    echo "Note: The MongoDB URI has been updated to use the outre_couture database."
+    echo "The database will be created automatically when the app starts."
     exit 1
 fi
 
