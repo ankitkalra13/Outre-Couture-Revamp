@@ -29,25 +29,20 @@ This project uses three environment configurations for different deployment stag
 ### **Step 1: Local Development**
 ```bash
 cd Frontend
-cp env.development.example .env.development
-# Edit .env.development if needed
+# .env.development is already configured
 npm run dev
 ```
 
 ### **Step 2: Staging Deployment**
 ```bash
-# Copy staging environment
-cp env.staging.example .env.staging
-
+# .env.staging is already configured
 # Deploy to Vercel with staging environment
 vercel --env-file .env.staging
 ```
 
 ### **Step 3: Production Deployment**
 ```bash
-# Copy production environment
-cp env.production.example .env.production
-
+# .env.production is already configured
 # Deploy to Vercel with production environment
 vercel --env-file .env.production --prod
 ```
@@ -56,13 +51,22 @@ vercel --env-file .env.production --prod
 
 ## 🔧 **Vercel Environment Variables**
 
+### **Development Environment:**
+- `NEXT_PUBLIC_API_URL`: `http://localhost:5000/api`
+- `NEXT_PUBLIC_SITE_URL`: `http://localhost:3000`
+- `NEXT_PUBLIC_ENV`: `development`
+- `NEXT_PUBLIC_DEBUG`: `true`
+
+
 ### **Staging Environment:**
 - `NEXT_PUBLIC_API_URL`: `https://outre-couture-staging.onrender.com/api`
+- `NEXT_PUBLIC_SITE_URL`: `https://outre-couture-staging.vercel.app`
 - `NEXT_PUBLIC_ENV`: `staging`
 - `NEXT_PUBLIC_DEBUG`: `false`
 
 ### **Production Environment:**
 - `NEXT_PUBLIC_API_URL`: `https://outre-couture-production.onrender.com/api`
+- `NEXT_PUBLIC_SITE_URL`: `https://www.outrecouture.com`
 - `NEXT_PUBLIC_ENV`: `production`
 - `NEXT_PUBLIC_DEBUG`: `false`
 
@@ -82,8 +86,8 @@ vercel --env-file .env.production --prod
 
 ## ⚠️ **Important Notes**
 
-1. **Never commit `.env.*` files** (they're in .gitignore)
-2. **Only commit `.env.*.example` files** (templates)
+1. **Environment files are already configured** and ready to use
+2. **All `.env.*` files are protected** by .gitignore
 3. **Update backend URLs** when you deploy to Render
 4. **Set environment variables** in Vercel dashboard for production
 5. **Use port 5000** for local backend development

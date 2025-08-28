@@ -26,14 +26,14 @@ export const metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://outrecouture.com'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://outrecouture.com'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://outrecouture.com',
+    url: process.env.NEXT_PUBLIC_SITE_URL || 'https://outrecouture.com',
     title: 'Outre Couture - Premium Fashion & Lifestyle',
     description: 'Discover our premium collection of men\'s and women\'s fashion, accessories, and bags.',
     siteName: 'Outre Couture',

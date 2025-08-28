@@ -1,5 +1,5 @@
 export default async function sitemap() {
-  const baseUrl = 'https://outrecouture.com';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://outrecouture.com';
 
   // Static pages
   const staticPages = [
