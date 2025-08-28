@@ -37,12 +37,12 @@ API_HOST = os.getenv('API_HOST', '0.0.0.0')
 API_PORT = int(os.getenv('API_PORT', 5000))
 
 app = Flask(__name__)
-# CORS Configuration - Allow both development and production domains
+# CORS Configuration - Use environment variable for frontend URL
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
 CORS(app, origins=[
-    'http://localhost:3000', 
-    'http://localhost:3001',
-    'https://outre-couture.vercel.app',  # Your Vercel domain
-    'https://outre-couture-frontend.vercel.app'  # Alternative Vercel domain
+    FRONTEND_URL,
+    'http://localhost:3000',  # Fallback for development
+    'http://localhost:3001'   # Alternative port
 ], supports_credentials=True)
 
 # MongoDB Configuration
