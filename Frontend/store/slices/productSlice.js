@@ -6,13 +6,16 @@ export const fetchProducts = createAsyncThunk(
   'products/fetchProducts',
   async (filters = {}, { rejectWithValue }) => {
     try {
+      console.log('fetchProducts called with filters:', filters);
       const response = await apiService.getProducts(filters);
+      console.log('fetchProducts API response:', response);
       if (response.success) {
         return response;
       } else {
         return rejectWithValue(response.error || 'Failed to fetch products');
       }
     } catch (error) {
+      console.error('fetchProducts error:', error);
       return rejectWithValue(error.message || 'Failed to fetch products');
     }
   }
@@ -82,6 +85,22 @@ export const deleteProduct = createAsyncThunk(
   }
 );
 
+export const fetchProductsByMainCategory = createAsyncThunk(
+  'products/fetchProductsByMainCategory',
+  async ({ mainCategorySlug, filters = {} }, { rejectWithValue }) => {
+    try {
+      const response = await apiService.getProductsByMainCategory(mainCategorySlug, filters);
+      if (response.success) {
+        return response;
+      } else {
+        return rejectWithValue(response.error || 'Failed to fetch products by category');
+      }
+    } catch (error) {
+      return rejectWithValue(error.message || 'Failed to fetch products by category');
+    }
+  }
+);
+
 // Initial state
 const initialState = {
   products: [],
@@ -90,6 +109,7 @@ const initialState = {
   error: null,
   filters: {
     category_id: '',
+    sub_category_id: '',
     search: '',
     sortBy: 'name',
     viewMode: 'grid',
@@ -112,6 +132,7 @@ const productSlice = createSlice({
     clearFilters: (state) => {
       state.filters = {
         category_id: '',
+        sub_category_id: '',
         search: '',
         sortBy: 'name',
         viewMode: 'grid',
@@ -215,6 +236,26 @@ const productSlice = createSlice({
         }
       })
       .addCase(deleteProduct.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
+
+    // Fetch Products By Main Category
+    builder
+      .addCase(fetchProductsByMainCategory.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchProductsByMainCategory.fulfilled, (state, action) => {
+        state.loading = false;
+        state.products = action.payload.products;
+        state.pagination = {
+          total: action.payload.total,
+          limit: action.payload.limit,
+          skip: action.payload.skip,
+        };
+      })
+      .addCase(fetchProductsByMainCategory.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

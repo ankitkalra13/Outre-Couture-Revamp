@@ -137,6 +137,18 @@ class ApiService {
     return this.makeRequest('/categories');
   }
 
+  async getMainCategories() {
+    return this.makeRequest('/categories/main');
+  }
+
+  async getSubCategories(mainCategorySlug) {
+    return this.makeRequest(`/categories/sub/${mainCategorySlug}`);
+  }
+
+  async getCategoriesForAdmin() {
+    return this.makeRequest('/categories/admin');
+  }
+
   async createCategory(categoryData) {
     return this.makeRequest('/categories', {
       method: 'POST',
@@ -168,6 +180,32 @@ class ApiService {
 
     const queryString = queryParams.toString();
     const endpoint = queryString ? `/products?${queryString}` : '/products';
+    
+    console.log('getProducts called with filters:', filters);
+    console.log('getProducts endpoint:', endpoint);
+    
+    return this.makeRequest(endpoint);
+  }
+
+  async getProductsByMainCategory(mainCategorySlug, filters = {}) {
+    console.log('getProductsByMainCategory called with mainCategorySlug:', mainCategorySlug, 'filters:', filters);
+    
+    if (!mainCategorySlug) {
+      console.error('getProductsByMainCategory called with undefined mainCategorySlug');
+      throw new Error('mainCategorySlug is required');
+    }
+    
+    const queryParams = new URLSearchParams();
+    
+    if (filters.sub_category_id) queryParams.append('sub_category_id', filters.sub_category_id);
+    if (filters.is_active !== undefined) queryParams.append('is_active', filters.is_active);
+    if (filters.limit) queryParams.append('limit', filters.limit);
+    if (filters.skip) queryParams.append('skip', filters.skip);
+
+    const queryString = queryParams.toString();
+    const endpoint = queryString ? `/products/category/${mainCategorySlug}?${queryString}` : `/products/category/${mainCategorySlug}`;
+    
+    console.log('getProductsByMainCategory endpoint:', endpoint);
     
     return this.makeRequest(endpoint);
   }

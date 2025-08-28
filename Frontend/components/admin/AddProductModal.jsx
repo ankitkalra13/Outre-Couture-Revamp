@@ -14,14 +14,13 @@ import { useToast } from '@/components/ui/Toast';
 const productSchema = z.object({
   name: z.string().min(3, 'Product name must be at least 3 characters'),
   category_id: z.string().min(1, 'Please select a category'),
-  price: z.number().min(0.01, 'Price must be greater than 0'),
   description: z.string().min(10, 'Description must be at least 10 characters'),
   is_active: z.boolean().default(true),
 });
 
 export default function AddProductModal({ isOpen, onClose, editingProduct = null }) {
   const dispatch = useAppDispatch();
-  const { categories } = useAppSelector((state) => state.categories);
+  const { categories, mainCategories, subCategories } = useAppSelector((state) => state.categories);
   const { success, error } = useToast();
   const [images, setImages] = useState([]);
   const [specifications, setSpecifications] = useState({
@@ -43,7 +42,6 @@ export default function AddProductModal({ isOpen, onClose, editingProduct = null
     defaultValues: {
       name: '',
       category_id: '',
-      price: '',
       description: '',
       is_active: true,
     },
@@ -55,7 +53,6 @@ export default function AddProductModal({ isOpen, onClose, editingProduct = null
     if (editingProduct) {
       setValue('name', editingProduct.name);
       setValue('category_id', editingProduct.category_id);
-      setValue('price', editingProduct.price);
       setValue('description', editingProduct.description);
       setValue('is_active', editingProduct.is_active);
       setImages(editingProduct.images || []);
@@ -95,7 +92,6 @@ export default function AddProductModal({ isOpen, onClose, editingProduct = null
       
       const productData = {
         ...data,
-        price: parseFloat(data.price),
         images: images.map(img => img.name),
         specifications,
       };
@@ -194,35 +190,24 @@ export default function AddProductModal({ isOpen, onClose, editingProduct = null
                       errors.category_id ? 'border-red-500' : 'border-gray-300'
                     }`}
                   >
-                    <option value="">Select a category</option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
+                    <option value="">Select a sub-category</option>
+                    {categories.filter(cat => cat.type === 'main').map((mainCategory) => (
+                      <optgroup key={mainCategory.id} label={`${mainCategory.name} (Main Category)`}>
+                        {categories.filter(cat => cat.type === 'sub' && cat.main_category_id === mainCategory.id).map((subCategory) => (
+                          <option key={subCategory.id} value={subCategory.id}>
+                            {subCategory.name}
+                          </option>
+                        ))}
+                      </optgroup>
                     ))}
                   </select>
                   {errors.category_id && (
                     <p className="text-red-500 text-sm mt-1">{errors.category_id.message}</p>
                   )}
+                  <p className="text-xs text-gray-500 mt-1">Products must be assigned to a sub-category</p>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Price *
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    {...register('price', { valueAsNumber: true })}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent ${
-                      errors.price ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                    placeholder="0.00"
-                  />
-                  {errors.price && (
-                    <p className="text-red-500 text-sm mt-1">{errors.price.message}</p>
-                  )}
-                </div>
+
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">

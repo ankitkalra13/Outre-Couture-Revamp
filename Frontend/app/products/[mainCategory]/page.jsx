@@ -4,31 +4,51 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Filter, Grid3X3, List, Eye, ChevronLeft, ChevronRight, Package } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { fetchProducts } from '@/store/slices/productSlice';
-import { fetchMainCategories } from '@/store/slices/categorySlice';
+import { fetchProductsByMainCategory } from '@/store/slices/productSlice';
+import { fetchSubCategories } from '@/store/slices/categorySlice';
 import Image from 'next/image';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 
-export default function ProductsPage() {
+export default function CategoryProductsPage({ params }) {
+  const { mainCategory } = params;
   const dispatch = useAppDispatch();
   const { products, loading, error, filters: productFilters } = useAppSelector((state) => state.products);
-  const { mainCategories } = useAppSelector((state) => state.categories);
+  const { subCategories } = useAppSelector((state) => state.categories);
   
   const [localFilters, setLocalFilters] = useState({
+    sub_category_id: '',
     search: '',
     sortBy: 'name',
     viewMode: 'grid',
     page: 1
   });
 
-  const [selectedMainCategory, setSelectedMainCategory] = useState(null);
+  const [selectedSubCategory, setSelectedSubCategory] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = 12;
 
+  // Validate main category
+  const validCategories = ['men', 'women', 'accessories', 'bags'];
+  if (!validCategories.includes(mainCategory)) {
+    notFound();
+  }
+
+  const categorySubCategories = subCategories[mainCategory] || [];
+  
+  // Debug logging
+  console.log('subCategories state:', subCategories);
+  console.log('mainCategory:', mainCategory);
+  console.log('categorySubCategories:', categorySubCategories);
+
   useEffect(() => {
-    dispatch(fetchMainCategories());
-    dispatch(fetchProducts({ limit: 100 }));
-  }, [dispatch]);
+    console.log('CategoryProductsPage useEffect - fetching data for:', mainCategory);
+    dispatch(fetchSubCategories(mainCategory));
+    dispatch(fetchProductsByMainCategory({ 
+      mainCategorySlug: mainCategory, 
+      filters: { limit: 100 } 
+    }));
+  }, [dispatch, mainCategory]);
 
   useEffect(() => {
     const filters = { 
@@ -36,8 +56,8 @@ export default function ProductsPage() {
       page: currentPage 
     };
     
-    if (selectedMainCategory) {
-      filters.main_category_slug = selectedMainCategory;
+    if (selectedSubCategory) {
+      filters.sub_category_id = selectedSubCategory;
     }
     
     if (localFilters.search) {
@@ -48,8 +68,8 @@ export default function ProductsPage() {
       filters.sortBy = localFilters.sortBy;
     }
     
-    dispatch(fetchProducts(filters));
-  }, [selectedMainCategory, localFilters.search, localFilters.sortBy, currentPage, dispatch]);
+    dispatch(fetchProductsByMainCategory({ mainCategorySlug: mainCategory, filters }));
+  }, [selectedSubCategory, localFilters.search, localFilters.sortBy, currentPage, dispatch, mainCategory]);
 
   const handleFilterChange = (key, value) => {
     setLocalFilters(prev => ({ ...prev, [key]: value }));
@@ -58,14 +78,26 @@ export default function ProductsPage() {
     }
   };
 
-  const handleMainCategorySelect = (categorySlug) => {
-    setSelectedMainCategory(selectedMainCategory === categorySlug ? null : categorySlug);
+  const handleSubCategorySelect = (subCategory) => {
+    const newSelectedSubCategory = selectedSubCategory === subCategory ? null : subCategory;
+    setSelectedSubCategory(newSelectedSubCategory);
+    setLocalFilters(prev => ({ ...prev, sub_category_id: newSelectedSubCategory }));
     setCurrentPage(1); // Reset to first page
   };
 
   const handleSearch = (e) => {
     e.preventDefault();
     setCurrentPage(1); // Reset to first page
+  };
+
+  const getCategoryTitle = (category) => {
+    const titles = {
+      men: 'Men\'s Fashion',
+      women: 'Women\'s Fashion', 
+      accessories: 'Accessories',
+      bags: 'Bags & Handbags'
+    };
+    return titles[category] || category;
   };
 
   // Pagination logic
@@ -118,7 +150,7 @@ export default function ProductsPage() {
         
         <div className="flex items-center justify-between">
           <Link 
-            href={`/products/${product.main_category_slug}/${product.id}`}
+            href={`/products/${mainCategory}/${product.id}`}
             className="bg-brand text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors flex items-center"
           >
             <Eye size={16} className="mr-2" />
@@ -142,18 +174,24 @@ export default function ProductsPage() {
             <li>
               <ChevronRight size={16} className="text-gray-400" />
             </li>
-            <li className="text-gray-900 font-medium">Products</li>
+            <li>
+              <Link href="/products" className="hover:text-brand transition-colors">Products</Link>
+            </li>
+            <li>
+              <ChevronRight size={16} className="text-gray-400" />
+            </li>
+            <li className="text-gray-900 font-medium capitalize">{getCategoryTitle(mainCategory)}</li>
           </ol>
         </nav>
 
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Our Products</h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">Discover our collection of high-quality fashion products designed for modern lifestyles</p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">{getCategoryTitle(mainCategory)}</h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">Discover our collection of high-quality {mainCategory} products designed for modern lifestyles</p>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Left Sidebar - Filters & Main Categories */}
+          {/* Left Sidebar - Filters & Sub-categories */}
           <div className="lg:w-1/4">
             <div className="bg-white rounded-xl shadow-lg p-6 sticky top-24">
               {/* Search */}
@@ -188,24 +226,30 @@ export default function ProductsPage() {
                 </select>
               </div>
 
-              {/* Main Categories */}
+              {/* Sub-categories */}
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Categories</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Sub-categories</h3>
                 <div className="space-y-2">
-                  {mainCategories.map((category) => (
-                    <button
-                      key={category.id}
-                      onClick={() => handleMainCategorySelect(category.slug)}
-                      className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
-                        selectedMainCategory === category.slug
-                          ? 'bg-brand text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      <div className="font-medium">{category.name}</div>
-                      <div className="text-sm opacity-75">{category.description}</div>
-                    </button>
-                  ))}
+                  {categorySubCategories && categorySubCategories.length > 0 ? (
+                    categorySubCategories.map((category) => (
+                      <button
+                        key={category.id}
+                        onClick={() => handleSubCategorySelect(category.id)}
+                        className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
+                          selectedSubCategory === category.id
+                            ? 'bg-brand text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        <div className="font-medium">{category.name}</div>
+                        <div className="text-sm opacity-75">{category.description}</div>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="text-center py-4 text-gray-500">
+                      {loading ? 'Loading sub-categories...' : 'No sub-categories found'}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -240,7 +284,7 @@ export default function ProductsPage() {
             <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">All Products</h2>
+                  <h2 className="text-2xl font-bold text-gray-900">{getCategoryTitle(mainCategory)} Products</h2>
                   <p className="text-gray-600">
                     {loading && products.length === 0 ? 'Loading...' : `${currentProducts.length} of ${products.length} products`}
                   </p>
@@ -266,7 +310,7 @@ export default function ProductsPage() {
               <div className="text-center py-12">
                 <p className="text-red-600 mb-4">{error}</p>
                 <button
-                  onClick={() => dispatch(fetchProducts({ limit: 100 }))}
+                  onClick={() => dispatch(fetchProductsByMainCategory({ mainCategorySlug: mainCategory, filters: { limit: 100 } }))}
                   className="bg-brand text-white px-6 py-2 rounded-lg hover:bg-red-800 transition-colors"
                 >
                   Try Again
@@ -296,9 +340,9 @@ export default function ProductsPage() {
                 <button
                   onClick={() => {
                     setLocalFilters({ search: '', sortBy: 'name', viewMode: 'grid' });
-                    setSelectedMainCategory(null);
+                    setSelectedSubCategory(null);
                     setCurrentPage(1);
-                    dispatch(fetchProducts({ limit: 100 }));
+                    dispatch(fetchProductsByMainCategory({ mainCategorySlug: mainCategory, filters: { limit: 100 } }));
                   }}
                   className="bg-brand text-white px-6 py-2 rounded-lg hover:bg-red-800 transition-colors"
                 >

@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Edit, Trash2, Tag } from 'lucide-react';
+import { Plus, Edit, Trash2, Tag, ChevronRight, FolderOpen, Folder } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { fetchCategories, createCategory, updateCategory, deleteCategory } from '@/store/slices/categorySlice';
+import { fetchCategoriesForAdmin, createCategory, updateCategory, deleteCategory } from '@/store/slices/categorySlice';
 import { useToast } from '@/components/ui/Toast';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 
@@ -14,25 +14,52 @@ export default function AdminCategories() {
   const { success, error, warning } = useToast();
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
-  const [formData, setFormData] = useState({ name: '', description: '' });
+  const [formData, setFormData] = useState({ 
+    name: '', 
+    description: '', 
+    type: 'main',
+    main_category_id: '',
+    slug: ''
+  });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState(null);
 
   useEffect(() => {
-    dispatch(fetchCategories());
+    dispatch(fetchCategoriesForAdmin());
   }, [dispatch]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       console.log('Submitting category:', formData);
+      
+      // Prepare category data
+      const categoryData = {
+        name: formData.name,
+        description: formData.description,
+        type: formData.type,
+        slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, '-').replace(/&/g, 'and')
+      };
+      
+      // Add main_category_id for sub-categories
+      if (formData.type === 'sub' && formData.main_category_id) {
+        categoryData.main_category_id = formData.main_category_id;
+      }
+      
       if (editingCategory) {
-        await dispatch(updateCategory({ categoryId: editingCategory.id, categoryData: formData })).unwrap();
+        await dispatch(updateCategory({ categoryId: editingCategory.id, categoryData })).unwrap();
         setEditingCategory(null);
       } else {
-        await dispatch(createCategory(formData)).unwrap();
+        await dispatch(createCategory(categoryData)).unwrap();
       }
-      setFormData({ name: '', description: '' });
+      
+      setFormData({ 
+        name: '', 
+        description: '', 
+        type: 'main',
+        main_category_id: '',
+        slug: ''
+      });
       setShowAddModal(false);
       success(editingCategory ? 'Category updated successfully!' : 'Category created successfully!');
     } catch (error) {
@@ -58,14 +85,26 @@ export default function AdminCategories() {
 
   const openEditModal = (category) => {
     setEditingCategory(category);
-    setFormData({ name: category.name, description: category.description });
+    setFormData({ 
+      name: category.name, 
+      description: category.description,
+      type: category.type || 'main',
+      main_category_id: category.main_category_id || '',
+      slug: category.slug || ''
+    });
     setShowAddModal(true);
   };
 
   const closeModal = () => {
     setShowAddModal(false);
     setEditingCategory(null);
-    setFormData({ name: '', description: '' });
+    setFormData({ 
+      name: '', 
+      description: '', 
+      type: 'main',
+      main_category_id: '',
+      slug: ''
+    });
   };
 
   if (loading) {
@@ -94,31 +133,35 @@ export default function AdminCategories() {
         </button>
       </div>
 
-      {/* Categories Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {categories.map((category) => (
+      {/* Categories Display */}
+      <div className="space-y-6">
+        {/* Main Categories */}
+        {categories.filter(cat => cat.type === 'main').map((mainCategory) => (
           <motion.div
-            key={category.id}
+            key={mainCategory.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow"
+            className="bg-white rounded-xl shadow-lg p-6"
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center">
                 <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
-                  <Tag size={20} className="text-blue-600" />
+                  <FolderOpen size={20} className="text-blue-600" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900">{category.name}</h3>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">{mainCategory.name}</h3>
+                  <p className="text-sm text-gray-500">Main Category</p>
+                </div>
               </div>
               <div className="flex items-center space-x-2">
                 <button
-                  onClick={() => openEditModal(category)}
+                  onClick={() => openEditModal(mainCategory)}
                   className="text-blue-600 hover:text-blue-900 p-1"
                 >
                   <Edit size={16} />
                 </button>
                 <button
-                  onClick={() => handleDeleteCategory(category.id)}
+                  onClick={() => handleDeleteCategory(mainCategory.id)}
                   className="text-red-600 hover:text-red-900 p-1"
                 >
                   <Trash2 size={16} />
@@ -127,31 +170,60 @@ export default function AdminCategories() {
             </div>
             
             <p className="text-gray-600 text-sm mb-4">
-              {category.description || 'No description provided'}
+              {mainCategory.description || 'No description provided'}
             </p>
             
-            <div className="flex items-center justify-between text-sm text-gray-500">
-              <span>Created: {new Date(category.created_at).toLocaleDateString()}</span>
+            {/* Sub-categories */}
+            <div className="mt-4">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Sub-categories:</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {categories.filter(cat => cat.type === 'sub' && cat.main_category_id === mainCategory.id).map((subCategory) => (
+                  <div key={subCategory.id} className="bg-gray-50 rounded-lg p-3 flex items-center justify-between">
+                    <div className="flex items-center">
+                      <Folder size={16} className="text-gray-500 mr-2" />
+                      <span className="text-sm font-medium text-gray-700">{subCategory.name}</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <button
+                        onClick={() => openEditModal(subCategory)}
+                        className="text-blue-600 hover:text-blue-900 p-1"
+                      >
+                        <Edit size={14} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteCategory(subCategory.id)}
+                        className="text-red-600 hover:text-red-900 p-1"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between text-sm text-gray-500 mt-4">
+              <span>Created: {new Date(mainCategory.created_at).toLocaleDateString()}</span>
               <span className="bg-gray-100 px-2 py-1 rounded-full text-xs">
-                ID: {category.id.slice(0, 8)}...
+                ID: {mainCategory.id.slice(0, 8)}...
               </span>
             </div>
           </motion.div>
         ))}
       </div>
 
-      {categories.length === 0 && (
+      {categories.filter(cat => cat.type === 'main').length === 0 && (
         <div className="text-center py-12">
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Tag size={32} className="text-gray-400" />
+            <FolderOpen size={32} className="text-gray-400" />
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">No categories yet</h3>
-          <p className="text-gray-600 mb-4">Get started by creating your first category</p>
+          <p className="text-gray-600 mb-4">Get started by creating your first main category</p>
           <button
             onClick={() => setShowAddModal(true)}
             className="bg-brand text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors"
           >
-            Create Category
+            Create Main Category
           </button>
         </div>
       )}
@@ -166,6 +238,22 @@ export default function AdminCategories() {
             
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
+                <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-2">
+                  Category Type
+                </label>
+                <select
+                  id="type"
+                  value={formData.type}
+                  onChange={(e) => setFormData({ ...formData, type: e.target.value, main_category_id: '' })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                >
+                  <option value="main">Main Category</option>
+                  <option value="sub">Sub Category</option>
+                </select>
+              </div>
+              
+              <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                   Category Name
                 </label>
@@ -178,6 +266,43 @@ export default function AdminCategories() {
                   placeholder="Enter category name"
                   required
                 />
+              </div>
+              
+              {formData.type === 'sub' && (
+                <div>
+                  <label htmlFor="main_category_id" className="block text-sm font-medium text-gray-700 mb-2">
+                    Main Category
+                  </label>
+                  <select
+                    id="main_category_id"
+                    value={formData.main_category_id}
+                    onChange={(e) => setFormData({ ...formData, main_category_id: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  >
+                    <option value="">Select a main category</option>
+                    {categories.filter(cat => cat.type === 'main').map((mainCat) => (
+                      <option key={mainCat.id} value={mainCat.id}>
+                        {mainCat.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              
+              <div>
+                <label htmlFor="slug" className="block text-sm font-medium text-gray-700 mb-2">
+                  Slug (Optional)
+                </label>
+                <input
+                  type="text"
+                  id="slug"
+                  value={formData.slug}
+                  onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Auto-generated if left empty"
+                />
+                <p className="text-xs text-gray-500 mt-1">URL-friendly version of the name</p>
               </div>
               
               <div>

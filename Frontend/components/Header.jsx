@@ -1,162 +1,139 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, User, LogOut, Settings } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import IMAGES from '@/lib/images';
-import Image from 'next/image';
-import { Twitter, Facebook, Linkedin, Instagram, Mail } from 'lucide-react';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { logoutUser } from '@/store/slices/authSlice';
+import { Menu, X } from 'lucide-react';
+import { useState } from 'react';
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const dispatch = useAppDispatch();
-  const { user, isAuthenticated, isAdmin } = useAppSelector((state) => state.auth);
-
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 10);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   const navLinks = [
     { name: 'Home', href: '/' },
     { name: 'About Us', href: '/about' },
-    { name: 'Products', href: '/products' },
+    { 
+      name: 'Products', 
+      href: '/products',
+      submenu: [
+        { name: 'Men', href: '/products/men' },
+        { name: 'Women', href: '/products/women' },
+        { name: 'Accessories', href: '/products/accessories' },
+        { name: 'Bags', href: '/products/bags' }
+      ]
+    },
     { name: 'Our Services', href: '/services' },
     { name: 'Fashion Forecast', href: '/fashion-forecast' },
     { name: 'FAQ', href: '/faq' },
   ];
 
-
-
   return (
-    <>
-      <header className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white shadow-md' : 'bg-white/95 shadow-md'}`}>
-        {/* Top Bar */}
-        <div className="hidden lg:block border-t-4 border-[#8B0000] bg-black text-white text-sm">
-          <div className="container mx-auto px-4 py-2">
-            <div className="flex justify-between items-center">
-              
-              {/* Social Icons */}
-              <div className="flex space-x-4">
-                <a href="https://twitter.com" target="_blank" rel="noopener noreferrer">
-                  <Twitter className="w-4 h-4 text-white hover:text-brand" />
-                </a>
-                <a href="https://facebook.com" target="_blank" rel="noopener noreferrer">
-                  <Facebook className="w-4 h-4 text-white hover:text-brand" />
-                </a>
-                <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer">
-                  <Linkedin className="w-4 h-4 text-white hover:text-brand" />
-                </a>
-                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
-                  <Instagram className="w-4 h-4 text-white hover:text-brand" />
-                </a>
-              </div>
-
-              {/* Email + Internship Text */}
-              <div className="flex items-center text-[12px] space-x-4">
-                <div className="flex items-center space-x-1">
-                  <Mail className="w-4 h-4 text-white text-[10px]" />
-                  <span>info@outrecouture.com</span>
-                </div>
-                <span className="text-brand">
-                  Apply for the internship / Part-time
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Navbar */}
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-20">
-            
-            {/* Logo */}
-            <Link href="/" className="flex items-center ml-[-15px]">
-              <Image src={IMAGES.HomeNew.logo} alt="Outre Couture Logo" className='w-[280px]'/>
-            </Link>
-
-            {/* Desktop Nav */}
-            <nav className="hidden lg:flex items-center space-x-6">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.name}
-                  href={link.href}
-                  className={`relative font-medium text-base text-gray hover:text-black transition ${
-                    link.name === 'Home' ? 'font-bold text-black' : ''
-                  }`}
-                >
-                  {link.name}
-                  {link.name === 'Home' && (
-                    <span className="absolute -bottom-1 left-0 w-full h-[2px] bg-brand"></span>
-                  )}
-                </Link>
-              ))}
-            </nav>
-
-            {/* Admin Access */}
-            <div className="hidden lg:flex items-center space-x-4">
-              <Link
-                href="/admin"
-                className="px-4 py-2 bg-brand text-white rounded-lg hover:bg-red-800 transition-colors flex items-center"
-              >
-                <Settings size={16} className="mr-2" />
-                Admin Panel
+    <header className="sticky top-0 z-50 bg-white shadow-md">
+      {/* Top Bar */}
+      <div className="hidden lg:block border-t-4 border-[#8B0000] bg-black text-white text-sm">
+        <div className="container mx-auto px-4 py-2">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center text-[12px] space-x-4">
+              <span>info@outrecouture.com</span>
+              <span className="text-brand">Apply for the internship / Part-time</span>
+              <Link href="/admin" className="text-white hover:text-brand transition-colors">
+                Sign in as Admin
               </Link>
             </div>
-
-            {/* Mobile Toggle */}
-            <button onClick={() => setIsOpen(!isOpen)} className="lg:hidden p-2 text-brand">
-              {isOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
           </div>
         </div>
+      </div>
 
-        {/* Mobile Nav */}
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden bg-white text-brand border-t"
-            >
-              <div className="container mx-auto px-4 py-4">
-                <div className="flex flex-col space-y-4">
-                  {navLinks.map((link) => (
+      {/* Navbar */}
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-20">
+          <Link href="/" className="text-2xl font-bold text-gray-900">
+            Outre Couture
+          </Link>
+
+          {/* Desktop Nav */}
+          <nav className="hidden lg:flex items-center space-x-6">
+            {navLinks.map((link) => (
+              <div key={link.name} className="relative group">
+                {link.submenu ? (
+                  <div className="flex items-center space-x-1 cursor-pointer">
+                    <Link href={link.href} className="font-medium text-base text-gray hover:text-black transition">
+                      {link.name}
+                    </Link>
+                    <svg className="w-4 h-4 text-gray group-hover:text-black transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path d="M19 9l-7 7-7-7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    {/* Dropdown Menu */}
+                    <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                      <div className="py-2">
+                        {link.submenu.map((subItem) => (
+                          <Link
+                            key={subItem.name}
+                            href={subItem.href}
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                          >
+                            {subItem.name}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <Link
+                    href={link.href}
+                    className="font-medium text-base text-gray hover:text-black transition"
+                  >
+                    {link.name}
+                  </Link>
+                )}
+              </div>
+            ))}
+          </nav>
+
+          {/* Mobile Toggle */}
+          <button onClick={() => setIsOpen(!isOpen)} className="lg:hidden p-2 text-brand">
+            {isOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Nav */}
+      {isOpen && (
+        <div className="lg:hidden bg-white text-brand border-t">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex flex-col space-y-4">
+              {navLinks.map((link) => (
+                <div key={link.name}>
+                  {link.submenu ? (
+                    <div>
+                      <div className="text-gray-700 font-medium py-2">{link.name}</div>
+                      <div className="ml-4 space-y-2">
+                        {link.submenu.map((subItem) => (
+                          <Link
+                            key={subItem.name}
+                            href={subItem.href}
+                            onClick={() => setIsOpen(false)}
+                            className="block text-gray-600 text-sm py-1 hover:text-brand"
+                          >
+                            {subItem.name}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
                     <Link
-                      key={link.name}
                       href={link.href}
                       onClick={() => setIsOpen(false)}
                       className="text-gray-700 font-medium py-2"
                     >
                       {link.name}
                     </Link>
-                  ))}
-                  
-                  {/* Mobile Admin Access */}
-                  <div className="border-t pt-4">
-                    <Link
-                      href="/admin"
-                      className="block text-brand font-medium py-2"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      Admin Panel
-                    </Link>
-                  </div>
+                  )}
                 </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </header>
-
-
-    </>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </header>
   );
 };
 

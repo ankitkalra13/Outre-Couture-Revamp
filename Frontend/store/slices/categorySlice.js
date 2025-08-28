@@ -18,6 +18,38 @@ export const fetchCategories = createAsyncThunk(
   }
 );
 
+export const fetchMainCategories = createAsyncThunk(
+  'categories/fetchMainCategories',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await apiService.getMainCategories();
+      if (response.success) {
+        return response.categories;
+      } else {
+        return rejectWithValue(response.error || 'Failed to fetch main categories');
+      }
+    } catch (error) {
+      return rejectWithValue(error.message || 'Failed to fetch main categories');
+    }
+  }
+);
+
+export const fetchSubCategories = createAsyncThunk(
+  'categories/fetchSubCategories',
+  async (mainCategorySlug, { rejectWithValue }) => {
+    try {
+      const response = await apiService.getSubCategories(mainCategorySlug);
+      if (response.success) {
+        return { mainCategorySlug, categories: response.categories };
+      } else {
+        return rejectWithValue(response.error || 'Failed to fetch sub categories');
+      }
+    } catch (error) {
+      return rejectWithValue(error.message || 'Failed to fetch sub categories');
+    }
+  }
+);
+
 export const createCategory = createAsyncThunk(
   'categories/createCategory',
   async (categoryData, { rejectWithValue }) => {
@@ -66,9 +98,27 @@ export const deleteCategory = createAsyncThunk(
   }
 );
 
+export const fetchCategoriesForAdmin = createAsyncThunk(
+  'categories/fetchCategoriesForAdmin',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await apiService.getCategoriesForAdmin();
+      if (response.success) {
+        return response;
+      } else {
+        return rejectWithValue(response.error || 'Failed to fetch categories for admin');
+      }
+    } catch (error) {
+      return rejectWithValue(error.message || 'Failed to fetch categories for admin');
+    }
+  }
+);
+
 // Initial state
 const initialState = {
   categories: [],
+  mainCategories: [],
+  subCategories: {},
   loading: false,
   error: null,
 };
@@ -97,6 +147,36 @@ const categorySlice = createSlice({
         state.categories = action.payload;
       })
       .addCase(fetchCategories.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
+
+    // Fetch Main Categories
+    builder
+      .addCase(fetchMainCategories.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchMainCategories.fulfilled, (state, action) => {
+        state.loading = false;
+        state.mainCategories = action.payload;
+      })
+      .addCase(fetchMainCategories.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
+
+    // Fetch Sub Categories
+    builder
+      .addCase(fetchSubCategories.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchSubCategories.fulfilled, (state, action) => {
+        state.loading = false;
+        state.subCategories[action.payload.mainCategorySlug] = action.payload.categories;
+      })
+      .addCase(fetchSubCategories.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });
@@ -130,6 +210,26 @@ const categorySlice = createSlice({
         }
       })
       .addCase(updateCategory.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
+
+    // Fetch Categories For Admin
+    builder
+      .addCase(fetchCategoriesForAdmin.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchCategoriesForAdmin.fulfilled, (state, action) => {
+        state.loading = false;
+        state.categories = action.payload.main_categories.concat(action.payload.sub_categories_by_main ? Object.values(action.payload.sub_categories_by_main).flat() : []);
+        state.mainCategories = action.payload.main_categories;
+        // Organize sub-categories by main category
+        if (action.payload.sub_categories_by_main) {
+          state.subCategories = action.payload.sub_categories_by_main;
+        }
+      })
+      .addCase(fetchCategoriesForAdmin.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

@@ -6,16 +6,30 @@ const Footer = () => {
     { name: 'Home', href: '/' },
     { name: 'About Us', href: '/about' },
     { name: 'Services', href: '/services' },
-    { name: 'Blog', href: '/blog' },
     { name: 'Contact', href: '/contact' },
   ];
 
-  const services = [
-    { name: 'Business Setup', href: '/services#business-setup' },
-    { name: 'Golden Visa', href: '/golden-visa' },
-    { name: 'PRO Services', href: '/services#pro-services' },
-    { name: 'Banking Solutions', href: '/services#banking' },
-    { name: 'Legal Services', href: '/services#legal' },
+  const productCategories = [
+    { 
+      name: 'Men', 
+      href: '/products/men',
+      subCategories: ['Bottom', 'Formal Wear', 'Jackets', 'Shirts', 'Sports Wear', 'T-shirts']
+    },
+    { 
+      name: 'Women', 
+      href: '/products/women',
+      subCategories: ['Beach-Kaftans', 'Tops', 'Short Dress', 'Long Dress', 'Scarf', 'Skirts-Pants', 'Jackets-Coat']
+    },
+    { 
+      name: 'Accessories', 
+      href: '/products/accessories',
+      subCategories: ['Clothing Accessories', 'Jewelry', 'Handbag & Wallet Accessories']
+    },
+    { 
+      name: 'Bags', 
+      href: '/products/bags',
+      subCategories: ['Backpacks', 'Delivery Bags', 'Laptops Bags', 'Leather Style', 'Macrame & Beach', 'Messenger Bags', 'Paper Packing', 'Tote Bags']
+    }
   ];
 
   return (
@@ -27,13 +41,13 @@ const Footer = () => {
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
               <div className="w-10 h-10 bg-brand rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">D</span>
+                <span className="text-white font-bold text-xl">O</span>
               </div>
-              <span className="text-2xl font-bold">Dubiz</span>
+              <span className="text-2xl font-bold">Outre Couture</span>
             </div>
             <p className="text-brand text-sm leading-relaxed">
-              Your trusted partner for business setup, PRO services, and golden visa solutions in the UAE. 
-              We provide comprehensive business support services to help you succeed.
+              Your premier destination for high-quality fashion and lifestyle products. 
+              We offer a curated collection of men's and women's clothing, accessories, and bags.
             </p>
             <div className="flex space-x-4">
               <a href="#" className="text-brand-400 hover:text-bg-brand transition-colors">
@@ -68,21 +82,30 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Services */}
+          {/* Product Categories */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-brand">Our Services</h3>
-            <ul className="space-y-2">
-              {services.map((service) => (
-                <li key={service.name}>
+            <h3 className="text-lg font-semibold text-brand">Product Categories</h3>
+            <div className="grid grid-cols-2 gap-4">
+              {productCategories.map((category) => (
+                <div key={category.name} className="space-y-2">
                   <Link
-                    href={service.href}
-                    className="text-brand hover:text-bg-brand text-sm transition-colors"
+                    href={category.href}
+                    className="text-brand hover:text-bg-brand font-medium text-sm transition-colors"
                   >
-                    {service.name}
+                    {category.name}
                   </Link>
-                </li>
+                  <ul className="space-y-1">
+                    {category.subCategories.map((subCategory) => (
+                      <li key={subCategory}>
+                        <span className="text-brand-400 text-xs">
+                          {subCategory}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
 
           {/* Contact Info */}
@@ -92,17 +115,17 @@ const Footer = () => {
               <div className="flex items-start space-x-3">
                 <MapPin size={16} className="text-bg-brand mt-0.5 flex-shrink-0" />
                 <p className="text-brand text-sm">
-                  Office 123, Business Bay,<br />
-                  Dubai, UAE
+                  Fashion District,<br />
+                  New York, NY
                 </p>
               </div>
               <div className="flex items-center space-x-3">
                 <Phone size={16} className="text-bg-brand flex-shrink-0" />
-                <p className="text-brand text-sm">+971 4 123 4567</p>
+                <p className="text-brand text-sm">+1 (555) 123-4567</p>
               </div>
               <div className="flex items-center space-x-3">
                 <Mail size={16} className="text-bg-brand flex-shrink-0" />
-                <p className="text-brand text-sm">info@dubiz.co</p>
+                <p className="text-brand text-sm">info@outrecouture.com</p>
               </div>
             </div>
           </div>
@@ -114,7 +137,7 @@ const Footer = () => {
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-brand-400 text-sm">
-              © 2024 Dubiz. All rights reserved.
+              © 2024 Outre Couture. All rights reserved.
             </p>
             <div className="flex space-x-6 text-sm">
               <Link href="/privacy" className="text-brand hover:text-bg-brand transition-colors">
