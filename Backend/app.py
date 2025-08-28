@@ -37,10 +37,16 @@ API_HOST = os.getenv('API_HOST', '0.0.0.0')
 API_PORT = int(os.getenv('API_PORT', 5000))
 
 app = Flask(__name__)
-CORS(app)
+# CORS Configuration - Allow both development and production domains
+CORS(app, origins=[
+    'http://localhost:3000', 
+    'http://localhost:3001',
+    'https://outre-couture.vercel.app',  # Your Vercel domain
+    'https://outre-couture-frontend.vercel.app'  # Alternative Vercel domain
+], supports_credentials=True)
 
 # MongoDB Configuration
-MONGO_URI = os.getenv('MONGO_URI', 'mongodb+srv://ankitkalra13:ankit%408996@cluster0.j2yojqe.mongodb.net/UserDB')
+MONGO_URI = os.getenv('MONGO_URI', 'mongodb+srv://ankitkalra13:0yQ4N2JY1hJVXmyT@cluster0.j2yojqe.mongodb.net')
 client = MongoClient(MONGO_URI)
 db = client['outre_couture']
 
@@ -466,40 +472,133 @@ def get_categories():
     except (ConnectionError, ValueError, TypeError) as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/categories/main', methods=['GET'])
+def get_main_categories():
+    """Get main categories only"""
+    try:
+        main_categories = list(categories_collection.find({'type': 'main'}, {'_id': 0}))
+        # Convert to JSON serializable format
+        categories_json = convert_to_json_serializable(main_categories)
+        return jsonify({'success': True, 'categories': categories_json}), 200
+    except (ConnectionError, ValueError, TypeError) as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/categories/sub/<main_category_slug>', methods=['GET'])
+def get_sub_categories(main_category_slug):
+    """Get sub-categories for a specific main category"""
+    try:
+        # First find the main category
+        main_category = categories_collection.find_one({'slug': main_category_slug, 'type': 'main'})
+        if not main_category:
+            return jsonify({'success': False, 'error': 'Main category not found'}), 404
+        
+        # Get sub-categories for this main category
+        sub_categories = list(categories_collection.find(
+            {'main_category_id': main_category['id'], 'type': 'sub'}, 
+            {'_id': 0}
+        ))
+        
+        # Convert to JSON serializable format
+        categories_json = convert_to_json_serializable(sub_categories)
+        return jsonify({'success': True, 'categories': categories_json}), 200
+    except (ConnectionError, ValueError, TypeError) as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/api/categories', methods=['POST'])
 @require_admin
 def create_category():
-    """Create a new category"""
+    """Create a new category (main or sub-category)"""
     try:
         data = request.get_json()
         
-        if not data or 'name' not in data:
-            return jsonify({'success': False, 'error': 'Category name is required'}), 400
+        if not data or 'name' not in data or 'type' not in data:
+            return jsonify({'success': False, 'error': 'Category name and type are required'}), 400
         
         # Sanitize input
         data = sanitize_input(data)
+        
+        # Validate category type
+        if data['type'] not in ['main', 'sub']:
+            return jsonify({'success': False, 'error': 'Category type must be either "main" or "sub"'}), 400
         
         # Validate category name
         if len(data['name'].strip()) < 2:
             return jsonify({'success': False, 'error': 'Category name must be at least 2 characters long'}), 400
         
-        # Check if category already exists
-        existing_category = categories_collection.find_one({'name': data['name']})
+        # For sub-categories, validate main category
+        if data['type'] == 'sub':
+            if 'main_category_id' not in data:
+                return jsonify({'success': False, 'error': 'main_category_id is required for sub-categories'}), 400
+            
+            # Check if main category exists
+            main_category = categories_collection.find_one({'id': data['main_category_id'], 'type': 'main'})
+            if not main_category:
+                return jsonify({'success': False, 'error': 'Invalid main_category_id'}), 400
+        
+        # Check if category already exists (considering type and main category)
+        query = {'name': data['name'], 'type': data['type']}
+        if data['type'] == 'sub':
+            query['main_category_id'] = data['main_category_id']
+        
+        existing_category = categories_collection.find_one(query)
         if existing_category:
             return jsonify({'success': False, 'error': 'Category already exists'}), 400
         
+        # Create category object
         category = {
             'id': str(uuid.uuid4()),
             'name': data['name'].strip(),
+            'type': data['type'],
             'description': data.get('description', '').strip(),
+            'slug': data.get('slug', data['name'].lower().replace(' ', '-').replace('&', 'and')),
             'created_at': datetime.utcnow().isoformat(),
             'created_by': str(request.user['user_id'])
         }
+        
+        # Add sub-category specific fields
+        if data['type'] == 'sub':
+            category.update({
+                'main_category_id': data['main_category_id'],
+                'main_category_name': main_category['name'],
+                'main_category_slug': main_category['slug']
+            })
         
         categories_collection.insert_one(category)
         # Convert to JSON serializable format
         category_json = convert_to_json_serializable(category)
         return jsonify({'success': True, 'category': category_json}), 201
+    except (ConnectionError, ValueError, TypeError) as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/categories/admin', methods=['GET'])
+@require_admin
+def get_categories_for_admin():
+    """Get all categories organized by type for admin panel"""
+    try:
+        # Get main categories
+        main_categories = list(categories_collection.find(
+            {'type': 'main'}, 
+            {'_id': 0}
+        ).sort('name', 1))
+        
+        # Get sub-categories grouped by main category
+        sub_categories_by_main = {}
+        for main_cat in main_categories:
+            sub_cats = list(categories_collection.find(
+                {'main_category_id': main_cat['id'], 'type': 'sub'}, 
+                {'_id': 0}
+            ).sort('name', 1))
+            sub_categories_by_main[main_cat['id']] = sub_cats
+        
+        # Convert to JSON serializable format
+        main_categories_json = convert_to_json_serializable(main_categories)
+        sub_categories_by_main_json = convert_to_json_serializable(sub_categories_by_main)
+        
+        return jsonify({
+            'success': True, 
+            'main_categories': main_categories_json,
+            'sub_categories_by_main': sub_categories_by_main_json
+        }), 200
     except (ConnectionError, ValueError, TypeError) as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
@@ -586,7 +685,7 @@ def create_product():
     try:
         data = request.get_json()
         
-        required_fields = ['name', 'category_id', 'price', 'description']
+        required_fields = ['name', 'category_id', 'description']
         for field in required_fields:
             if field not in data:
                 return jsonify({'success': False, 'error': f'{field} is required'}), 400
@@ -594,22 +693,19 @@ def create_product():
         # Sanitize input
         data = sanitize_input(data)
         
-        # Validate price
-        try:
-            price = float(data['price'])
-            if price <= 0:
-                return jsonify({'success': False, 'error': 'Price must be greater than 0'}), 400
-        except (ValueError, TypeError):
-            return jsonify({'success': False, 'error': 'Invalid price format'}), 400
-        
         # Validate product name
         if len(data['name'].strip()) < 3:
             return jsonify({'success': False, 'error': 'Product name must be at least 3 characters long'}), 400
         
-        # Validate category exists
-        category = categories_collection.find_one({'id': data['category_id']})
-        if not category:
-            return jsonify({'success': False, 'error': 'Invalid category_id'}), 400
+        # Validate sub-category exists and get main category info
+        sub_category = categories_collection.find_one({'id': data['category_id'], 'type': 'sub'})
+        if not sub_category:
+            return jsonify({'success': False, 'error': 'Invalid category_id - must be a sub-category'}), 400
+        
+        # Get main category info
+        main_category = categories_collection.find_one({'id': sub_category['main_category_id'], 'type': 'main'})
+        if not main_category:
+            return jsonify({'success': False, 'error': 'Invalid main category reference'}), 400
         
         # Validate images array
         images = data.get('images', [])
@@ -620,8 +716,9 @@ def create_product():
             'id': str(uuid.uuid4()),
             'name': data['name'].strip(),
             'category_id': data['category_id'],
-            'category_name': category['name'],
-            'price': price,
+            'category_name': sub_category['name'],
+            'main_category_name': main_category['name'],
+            'main_category_slug': main_category['slug'],
             'description': data['description'].strip(),
             'images': images,
             'specifications': data.get('specifications', {}),
@@ -682,6 +779,36 @@ def get_product(product_id):
     except (ConnectionError, ValueError, TypeError) as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/products/category/<main_category_slug>', methods=['GET'])
+def get_products_by_main_category(main_category_slug):
+    """Get products by main category slug"""
+    try:
+        # Query parameters
+        sub_category_id = request.args.get('sub_category_id')
+        is_active = request.args.get('is_active', 'true').lower() == 'true'
+        limit = int(request.args.get('limit', 50))
+        skip = int(request.args.get('skip', 0))
+        
+        # Build query
+        query = {'is_active': is_active, 'main_category_slug': main_category_slug}
+        if sub_category_id:
+            query['category_id'] = sub_category_id
+        
+        products = list(products_collection.find(query, {'_id': 0}).skip(skip).limit(limit))
+        
+        # Convert to JSON serializable format
+        products_json = convert_to_json_serializable(products)
+        
+        return jsonify({
+            'success': True, 
+            'products': products_json,
+            'total': len(products),
+            'limit': limit,
+            'skip': skip
+        }), 200
+    except (ConnectionError, ValueError, TypeError) as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/api/products/<product_id>', methods=['PUT'])
 @require_admin
 def update_product(product_id):
@@ -708,8 +835,7 @@ def update_product(product_id):
                 return jsonify({'success': False, 'error': 'Invalid category_id'}), 400
             update_data['category_id'] = data['category_id']
             update_data['category_name'] = category['name']
-        if 'price' in data:
-            update_data['price'] = float(data['price'])
+
         if 'description' in data:
             update_data['description'] = data['description']
         if 'images' in data:
