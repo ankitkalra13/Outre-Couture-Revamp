@@ -36,13 +36,7 @@ export default function CategoryProductsPage({ params }) {
 
   const categorySubCategories = subCategories[mainCategory] || [];
   
-  // Debug logging
-  console.log('subCategories state:', subCategories);
-  console.log('mainCategory:', mainCategory);
-  console.log('categorySubCategories:', categorySubCategories);
-
   useEffect(() => {
-    console.log('CategoryProductsPage useEffect - fetching data for:', mainCategory);
     dispatch(fetchSubCategories(mainCategory));
     dispatch(fetchProductsByMainCategory({ 
       mainCategorySlug: mainCategory, 

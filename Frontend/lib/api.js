@@ -44,12 +44,7 @@ class ApiService {
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log('Adding Authorization header for:', endpoint);
-    } else {
-      console.log('No token found for:', endpoint);
     }
-
-    console.log('Request config:', { url, headers: config.headers });
 
     try {
       const response = await fetch(url, config);
@@ -181,17 +176,11 @@ class ApiService {
     const queryString = queryParams.toString();
     const endpoint = queryString ? `/products?${queryString}` : '/products';
     
-    console.log('getProducts called with filters:', filters);
-    console.log('getProducts endpoint:', endpoint);
-    
     return this.makeRequest(endpoint);
   }
 
   async getProductsByMainCategory(mainCategorySlug, filters = {}) {
-    console.log('getProductsByMainCategory called with mainCategorySlug:', mainCategorySlug, 'filters:', filters);
-    
     if (!mainCategorySlug) {
-      console.error('getProductsByMainCategory called with undefined mainCategorySlug');
       throw new Error('mainCategorySlug is required');
     }
     
@@ -204,8 +193,6 @@ class ApiService {
 
     const queryString = queryParams.toString();
     const endpoint = queryString ? `/products/category/${mainCategorySlug}?${queryString}` : `/products/category/${mainCategorySlug}`;
-    
-    console.log('getProductsByMainCategory endpoint:', endpoint);
     
     return this.makeRequest(endpoint);
   }

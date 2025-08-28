@@ -31,8 +31,6 @@ export default function AdminCategories() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      console.log('Submitting category:', formData);
-      
       // Prepare category data
       const categoryData = {
         name: formData.name,

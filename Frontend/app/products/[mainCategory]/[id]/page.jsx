@@ -58,7 +58,7 @@ export default function ProductDetailPage({ params }) {
   const handleRfqSubmit = async (e) => {
     e.preventDefault();
     // Here you would typically send the RFQ to your backend
-    console.log('RFQ submitted:', { ...rfqForm, productId: id, productName: currentProduct?.name });
+    
     
     // Show success message (you can implement a toast notification here)
     alert('RFQ submitted successfully! We will contact you soon.');

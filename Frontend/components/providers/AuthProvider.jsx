@@ -22,16 +22,12 @@ export default function AuthProvider({ children }) {
           try {
             // Try to verify the current token
             const verifyResult = await store.dispatch(verifyToken()).unwrap();
-            console.log('Token verification result:', verifyResult);
           } catch (error) {
-            console.log('Token verification failed, trying refresh:', error);
             // If verification fails, try to refresh the token
             if (refreshTokenValue) {
               try {
                 const refreshResult = await store.dispatch(refreshToken()).unwrap();
-                console.log('Token refresh result:', refreshResult);
               } catch (refreshError) {
-                console.log('Token refresh failed:', refreshError);
                 // If refresh fails, clear everything
                 localStorage.removeItem('access_token');
                 localStorage.removeItem('refresh_token');
